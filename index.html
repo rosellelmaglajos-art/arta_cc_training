@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Excellence: RA11032 Citizen's Charter</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #003399; /* DOTr Blue */
+            --accent: #d4af37; /* Gold/Bagong Pilipinas accent */
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #333;
+            --ai-color: #10a37f; /* AI Green */
+            --success: #28a745;
+            --error: #dc3545;
+        }
+
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 1rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .header-logos { display: flex; gap: 20px; align-items: center; }
+        .logo-img { height: 60px; width: auto; transition: transform 0.3s; }
+        .logo-img:hover { transform: scale(1.05); }
+        .header-text h1 { color: var(--primary); margin: 0; font-size: 1.5rem; text-transform: uppercase; }
+        .header-text small { color: #666; font-weight: 600; }
+
+        /* --- Layout --- */
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
+        .card {
+            background: var(--card-bg); border-radius: 12px; padding: 2.5rem;
+            margin-bottom: 2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            animation: fadeIn 0.5s ease-in-out; position: relative;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-top: 0; }
+        h3 { margin-top: 2rem; color: #444; }
+
+        /* --- UI Elements --- */
+        .btn {
+            background: var(--primary); color: white; border: none; padding: 12px 30px;
+            border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            font-size: 1rem; box-shadow: 0 4px 6px rgba(0,51,153,0.2);
+        }
+        .btn:hover { background: #002266; transform: translateY(-2px); }
+        
+        input[type="text"], input[type="tel"], select, textarea, input[type="password"] { 
+            width: 100%; padding: 12px; margin: 8px 0 20px 0; 
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; 
+            font-family: inherit; font-size: 1rem;
+        }
+        
+        .instruction-box {
+            background: #e8f0fe; border-left: 5px solid var(--primary);
+            padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #333;
+        }
+
+        /* --- Quiz Styling --- */
+        .quiz-item { background: #fafafa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; }
+        .quiz-option-row { 
+            display: flex; align-items: flex-start; padding: 12px; margin: 8px 0; 
+            background: white; border: 1px solid #ddd; border-radius: 6px; 
+            cursor: pointer; transition: 0.2s; 
+        }
+        .quiz-option-row:hover { background: #f0f4ff; border-color: var(--primary); }
+        .quiz-option-row input[type="radio"] { 
+            margin-right: 15px; margin-top: 4px; transform: scale(1.2); 
+            width: auto !important;
+        }
+        
+        /* --- Video Container --- */
+        .video-container {
+            position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+            border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin: 20px 0;
+        }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* --- AI Assistant Chatbot --- */
+        #ai-fab {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: var(--ai-color); color: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 2000;
+            transition: transform 0.3s;
+        }
+        #ai-fab:hover { transform: scale(1.1); }
+        
+        #ai-chat-window {
+            position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px;
+            background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none; flex-direction: column; z-index: 2000; overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        .chat-header { background: var(--ai-color); color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: #f9f9f9; }
+        .chat-input-area { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; }
+        .chat-msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; max-width: 80%; }
+        .bot-msg { background: #e0e0e0; color: #333; align-self: flex-start; }
+        .user-msg { background: var(--ai-color); color: white; align-self: flex-end; margin-left: auto; }
+        
+        /* --- AI Evaluation Badge --- */
+        .ai-badge { display: inline-block; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 10px; }
+        .ai-high { background: #d4edda; color: #155724; }
+        .ai-med { background: #fff3cd; color: #856404; }
+        .ai-low { background: #f8d7da; color: #721c24; }
+
+        /* --- Admin Dashboard --- */
+        #admin-panel { display: none; }
+        .admin-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid var(--primary); }
+        .stat-number { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        .data-table th, .data-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        .data-table th { background: var(--primary); color: white; }
+
+        /* --- Certificate --- */
+        #certificate-view { display: none; text-align: center; border: 15px solid var(--primary); padding: 40px; background: #fff; }
+    </style>
+</head>
+<body>
+
+<div id="ai-fab" onclick="toggleChat()">
+    <i class="fas fa-robot fa-2x"></i>
+</div>
+
+<div id="ai-chat-window">
+    <div class="chat-header">
+        <span><i class="fas fa-brain"></i> DOTr AI Assistant</span>
+        <i class="fas fa-times" style="cursor:pointer" onclick="toggleChat()"></i>
+    </div>
+    <div class="chat-body" id="chat-body">
+        <div class="chat-msg bot-msg">Hello! I am your AI learning companion. Ask me anything about RA 11032 or the Citizen's Charter!</div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Type a question..." style="margin:0">
+        <button class="btn" style="padding: 10px 15px; margin:0; border-radius: 4px;" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<div id="login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000;">
+    <div style="background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center;">
+        <h2 style="border:none">Admin Login</h2>
+        <input type="password" id="admin-pass" placeholder="Enter Password">
+        <button class="btn" onclick="verifyAdmin()" style="width:100%; margin-bottom:10px;">Login</button>
+        <button class="btn" style="background:#dc3545; width:100%" onclick="document.getElementById('login-modal').style.display='none'">Cancel</button>
+    </div>
+</div>
+
+<header>
+    <div class="header-logos">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Department_of_Transportation_%28Philippines%29.svg/1200px-Department_of_Transportation_%28Philippines%29.svg.png" alt="DOTr" class="logo-img">
+        <div class="header-text">
+            <h1>Service Excellence</h1>
+            <small>A Guide to RA11032 Citizen's Charter</small>
+        </div>
+    </div>
+    <div style="text-align: right;">
+        <img src="https://bagongpilipinasmediahub.ph/wp-content/uploads/2023/12/bagong-pilipinas-logo.png" alt="Bagong Pilipinas" class="logo-img">
+        <br>
+        <a onclick="document.getElementById('login-modal').style.display='flex'" style="cursor:pointer; font-size:0.8rem; color:#999; text-decoration:none;"><i class="fas fa-lock"></i> Admin</a>
+    </div>
+</header>
+
+<div class="container" id="app">
+    <div class="card" style="text-align:center">
+        <i class="fas fa-circle-notch fa-spin fa-3x" style="color:var(--primary)"></i>
+        <p>Initializing AI Models and Course Content...</p>
+    </div>
+</div>
+
+<div class="container" id="admin-panel">
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+        <h2><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h2>
+        <button class="btn" style="background:#dc3545" onclick="location.reload()">Logout</button>
+    </div>
+    
+    <div class="admin-dashboard">
+        <div class="stat-card">
+            <div class="stat-number" id="total-trainees">0</div>
+            <div>Registered Trainees</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="avg-engagement">0%</div>
+            <div>Avg. AI Engagement Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="completion-rate">0%</div>
+            <div>Completion Rate</div>
+        </div>
+    </div>
+
+    <h3>Trainee Progress & AI Insights</h3>
+    <div class="card" style="overflow-x:auto; padding:0;">
+        <table class="data-table" id="admin-table">
+            <thead>
+                <tr>
+                    <th>Trainee</th>
+                    <th>Pre-Test</th>
+                    <th>Post-Test</th>
+                    <th>AI Engagement</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // --- FIREBASE INIT ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsglkyvOo52izdT7JRBKSU3MLuPhGQAFY",
+      authDomain: "dotr-training.firebaseapp.com",
+      projectId: "dotr-training",
+      storageBucket: "dotr-training.firebasestorage.app",
+      messagingSenderId: "159217803126",
+      appId: "1:159217803126:web:ca4c064d94a1130512e457",
+      measurementId: "G-7E8NH1WRJ1"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- AI PROCTORING LOGIC ---
+    let aiProctor = {
+        focusLostCount: 0,
+        startTime: Date.now(),
+        interactions: 0,
+        getEngagementScore: function() {
+            // Formula: Base 100, penalize focus loss, bonus for interaction
+            let score = 100 - (this.focusLostCount * 5); 
+            if (this.interactions > 50) score += 5;
+            return Math.max(0, Math.min(100, score));
+        }
+    };
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            aiProctor.focusLostCount++;
+            console.log("AI Proctor: User left tab.");
+        }
+    });
+    document.addEventListener("click", () => aiProctor.interactions++);
+
+    // --- AI CHATBOT LOGIC ---
+    const knowledgeBase = {
+        "ra 11032": "Republic Act No. 11032 is the Ease of Doing Business and Efficient Government Service Delivery Act of 2018.",
+        "citizen": "A Citizen's Charter is an official document that details services, requirements, fees, and processing times.",
+        "charter": "The Citizen's Charter is a public document communicating the agency's service standards.",
+        "3-7-20": "Processing times: 3 days for simple, 7 days for complex, and 20 days for highly technical transactions.",
+        "fixing": "Fixing is facilitating transactions for gain/advantage and is strictly prohibited.",
+        "contact": "You can contact ARTA or the Presidential Complaints Center (8888).",
+        "pass": "You need 75% for module quizzes and 90% for the post-test.",
+        "hello": "Hello! I am your AI learning assistant. Ask me about the course topics!",
+        "time": "Processing times are strictly regulated: 3, 7, or 20 working days.",
+        "fee": "Fees must be clearly stated in the Citizen's Charter."
+    };
+
+    function toggleChat() {
+        const win = document.getElementById('ai-chat-window');
+        win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.toLowerCase().trim();
+        if (!text) return;
+        addMsg(input.value, 'user-msg');
+        input.value = '';
+        setTimeout(() => {
+            let response = "I'm analyzing your query... Try asking about 'RA 11032', 'Processing Time', or 'Citizen's Charter'.";
+            for (let key in knowledgeBase) {
+                if (text.includes(key)) { response = knowledgeBase[key]; break; }
+            }
+            addMsg(response, 'bot-msg');
+        }, 600);
+    }
+
+    function addMsg(text, className) {
+        const div = document.createElement('div');
+        div.className = `chat-msg ${className}`;
+        div.innerText = text;
+        const body = document.getElementById('chat-body');
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+    }
+
+    // --- COURSE DATA (EXACT TEXT) ---
+    const courseData = {
+        intro: `
+            <h2>INTRODUCTION</h2>
+            <p>The proper preparation of a Citizen’s Charter, as mandated by Republic Act No. 11032 (Ease of Doing Business and Efficient Government Service Delivery Act of 2018), ensures transparency, efficiency, and accountability in government transactions. It serves as a public document that clearly communicates the agency’s services, requirements, procedures, processing times, and feedback mechanisms. By adhering to RA 11032 guidelines, agencies reduce red tape, improve service delivery, and strengthen public trust.</p>
+            <h3>OBJECTIVES</h3>
+            <ol>
+                <li><strong>Understand the Legal Basis</strong><br>Briefly explains the provisions of RA 11032 and its relevance to the Citizen’s Charter.</li>
+                <li><strong>Learn the Key Components</strong><br>Identify the essential elements of a Citizen’s Charter, including service standards, requirements, and feedback mechanisms.</li>
+                <li><strong>Master the Five Core Modules</strong><br>Guide participants through the structured modules of this course:
+                    <ul><li>What is a Citizen’s Charter</li><li>Designing the Initial Sections</li><li>Organizing the Service Specifications</li><li>Feedback and Complaints Mechanisms</li><li>List of Offices: How to Include Them</li></ul>
+                </li>
+                <li><strong>Develop Practical Skills</strong><br>Equip participants with the ability to draft, review, and update a Citizen’s Charter in compliance with RA 11032.</li>
+            </ol>
+            <div class="video-container"><iframe src="https://drive.google.com/file/d/1ynq2Uz3n8y0CfCa2fv4uBsgXBWQfON3L/preview"></iframe></div>
+        `,
+        modules: [
+            {
+                title: "MODULE 1: WHAT IS A CITIZEN’S CHARTER?",
+                desc: "This module introduces the concept of the Citizen’s Charter as an official document and service standard mandated by Republic Act No. 11032. It explains its purpose as a pledge of transparency and efficiency, detailing the essential information government agencies must provide to citizens—such as services offered, requirements, fees, and processing times.<br><br>Understanding the Citizen’s Charter is crucial because it serves as a contract between the government and the public, ensuring accountability and reducing red tape. Mastery of this module lays the foundation for creating clear, accessible, and compliant charters that improve service delivery and strengthen public trust.",
+                video: "1B2aDfUBs8wmQKCOK4lyp-6ArNiN5_QVn",
+                quiz: [
+                    { q: "What is the primary goal of RA 11032?", options: ["A. To increase government revenue through higher business permit fees.", "B. To streamline government services by reducing bureaucratic red tape and averting graft.", "C. To mandate all citizens to register their personal businesses with national agencies.", "D. To provide financial subsidies to small and medium enterprises during the registration process."], ans: 1 },
+                    { q: "Which agency is specifically created and tasked to oversee the national implementation of RA 11032?", options: ["A. Anti-Red Tape Authority (ARTA).", "B. Civil Service Commission (CSC).", "C. Both A and B share equal primary oversight for implementation.", "D. Both A and C are incorrect."], ans: 0 },
+                    { q: "Under the law, what is the maximum prescribed processing time for 'simple transactions'?", options: ["A. Seven (7) working days.", "B. Five (5) working days.", "C. Three (3) working days.", "D. Two (2) working days."], ans: 2 },
+                    { q: "What is the penalty for the first offense of 'fixing' or collusion with fixers under RA 11032?", options: ["A. Administrative suspension from the service for six (6) months.", "B. Immediate dismissal from the service.", "C. Perpetual disqualification from holding public office.", "D. Both B and C are correct."], ans: 3 },
+                    { q: "How are agencies mandated to publish their service standards (Citizen’s Charter)?", options: ["A. Through conspicuous billboards at the main entrance of the office.", "B. Through official websites and digital platforms.", "C. Both A and B are correct.", "D. Both A and B are incorrect."], ans: 2 },
+                    { q: "RA 11032 is also known as the Ease of Doing Business and Efficient Government Service Delivery Act of 2018.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "RA 11032 was enacted and signed into law in the year 2015.", options: ["TRUE", "FALSE"], ans: 1 },
+                    { q: "RA 11032 applies only to national government agencies and does not cover local government units (LGUs) or GOCCs.", options: ["TRUE", "FALSE"], ans: 1 },
+                    { q: "The law mandates the use of technology, such as the establishment of a Central Business Portal, to improve service delivery.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "One of the main objectives of the law is to promote integrity and accountability in government by reducing bureaucratic red tape.", options: ["TRUE", "FALSE"], ans: 0 }
+                ]
+            },
+            {
+                title: "MODULE 2: DESIGNING THE INITIAL SECTIONS",
+                desc: "This module focuses on the foundational elements of the Citizen’s Charter Handbook, including the cover page, first page, and agency profile. It explains the proper formatting and placement of official logos, agency name, and the “Citizen’s Charter” label, as well as the inclusion of key organizational details such as Mandate, Vision, Mission, and Service Pledge. Additionally, it covers the creation of the List of Services and Service Headers, ensuring clarity and easy navigation for citizens.<br><br>Mastering the initial sections is essential because they establish the identity and credibility of the agency while providing citizens with clear, organized, and accessible information. A well-designed introduction sets the tone for transparency and professionalism, reinforcing the agency’s commitment to efficient and accountable service delivery.",
+                video: "1C2ejdr8HM8MRIkc3OnowtkgKU-Fm4yw4",
+                quiz: [
+                    { q: "Which of the following best describes the core purpose of the Citizen’s Charter as a 'service contract'?", options: ["A. To serve as a legally binding document for the collection of additional processing fees.", "B. To provide a comprehensive list of all government employees and their respective salary grades.", "C. To establish a transparent pact that outlines service standards, processing times, and accountability mechanisms for the public.", "D. To act as a marketing tool for the Department to showcase its annual achievements and project milestones."], ans: 2 },
+                    { q: "Which combination of information is strictly required to be included in an agency’s Citizen’s Charter?", options: ["A. Step-by-step procedures, required documents, fees to be paid, and the specific person responsible for each step.", "B. Internal office policies, employee attendance logs, and a list of all national holidays.", "C. Historical background of the agency, the organization’s mission-vision, and a map of all local branches.", "D. Both A and C are required under the standardized ARTA template."], ans: 0 },
+                    { q: "Which of the following pieces of information is NOT a mandatory requirement for the Citizen’s Charter under RA 11032?", options: ["A. The maximum time to conclude a specific transaction.", "B. The procedure for filing complaints and providing feedback.", "C. The personal contact numbers and home addresses of the service providers.", "D. The specific amount of fees to be paid, if any."], ans: 2 },
+                    { q: "Considering the mandate for transparency, which of the following is the most compliant way for an agency to approve and update its Citizen’s Charter?", options: ["A. The charter is approved by a simple majority of the rank-and-file employees and updated every five years.", "B. The charter is reviewed and updated at least once every three years or whenever a new service is introduced.", "C. The charter is approved by the head of the agency and updated only when there is a change in the national administration.", "D. The charter is approved by the Anti-Red Tape Authority (ARTA) and remains static for the duration of the agency's existence."], ans: 1 },
+                    { q: "How must the Citizen's Charter be communicated to ensure it reaches all types of clients effectively?", options: ["A. It must be published exclusively in the Official Gazette to maintain legal formality.", "B. It must be written in simple, non-technical language (English, Filipino, or local dialect) and posted in visible, conspicuous areas.", "C. It must be available only upon formal written request to the agency's records officer.", "D. It must be displayed solely on high-resolution digital screens to promote the government's 'paperless' initiative."], ans: 1 },
+                    { q: "The Citizen’s Charter is considered a service contract between the government and the citizens, detailing the expectations for service delivery.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Under RA 11032, agencies are strictly required to display their Citizen's Charter in visible and conspicuous areas, such as the main entrance of their offices.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "The Citizen's Charter is required to include specific complaint and feedback mechanisms to allow for continuous service improvement.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "To ensure digital accessibility, the law mandates that the Citizen's Charter must also be accessible online through the agency's official website.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "The Citizen’s Charter only needs to be written in English to ensure a professional and standardized format across all national agencies.", options: ["TRUE", "FALSE"], ans: 1 }
+                ]
+            },
+            {
+                title: "MODULE 3: ORGANIZING THE SERVICE SPECIFICATIONS",
+                desc: "This module explains how to structure the Service Specifications section of the Citizen’s Charter, which contains all essential details for availing government services. It covers fields such as Service Information, Who May Avail, Checklist of Requirements, Client Steps, and Agency Actions. These elements ensure citizens have complete, accurate, and transparent information about the process.<br><br>Part two of this module continues the discussion on service specifications, focusing on Fees per Step, Processing Time per Step, Person Responsible per Step, Total Fees, and Total Processing Time. It emphasizes accurate fee disclosure, realistic timeframes, and accountability through designated personnel.<br><br>Organizing service specifications properly promotes clarity, accountability, and efficiency. Understanding these components is critical for transparency and integrity in service delivery. By setting clear standards for fees, timelines, and responsibilities, agencies can curb corrupt practices, improve client trust, and comply with RA 11032’s mandate for efficient government transactions.",
+                video: "1-TLC6_nU6B1p1gPpxDm7toQ1GnUffdum",
+                quiz: [
+                    { q: "Under RA 11032, what is the prescribed maximum processing time for 'Complex Transactions'?", options: ["A. Five (5) working days.", "B. Seven (7) working days.", "C. Ten (10) working days.", "D. Twenty (20) working days."], ans: 1 },
+                    { q: "Highly technical transactions are subject to a specific time limit. What is the maximum period allowed for these types of services?", options: ["A. Fifteen (15) working days.", "B. Twenty (20) working days.", "C. Thirty (30) working days.", "D. Forty-five (45) working days."], ans: 1 },
+                    { q: "When defining a service standard in the Citizen’s Charter, which set of information must be specified to ensure full compliance?", options: ["A. The total number of employees in the division and their current performance ratings.", "B. The step-by-step procedure, required documents, fees to be paid, and the specific officer responsible for each step.", "C. The historical reason for the service and the list of previous applicants for transparency.", "D. Both A and B are mandatory requirements."], ans: 1 },
+                    { q: "What are the three (3) official types of transactions categorized under RA 11032?", options: ["A. Easy, Medium, and Hard.", "B. Simple, Complex, and Highly Technical.", "C. Fast, Slow, and Normal.", "D. Basic, Advanced, and Expert."], ans: 1 },
+                    { q: "What is the administrative consequence for an official who fails to meet the prescribed service standards for the first time without a valid reason?", options: ["A. Immediate dismissal from the service.", "B. A verbal warning from the Personnel Development Committee (PDC).", "C. Administrative liability and potential suspension from the service for six (6) months.", "D. Mandatory reassignment to a different Regional Office."], ans: 2 },
+                    { q: "Service standards define the expected quality, processing time, and fees for every government service provided to the public.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Simple transactions, which only require ministerial actions, should be completed within seven (7) working days.", options: ["TRUE", "FALSE"], ans: 1 },
+                    { q: "Highly technical transactions have no specific time limit due to their complexity and the multi-stage evaluation required.", options: ["TRUE", "FALSE"], ans: 1 },
+                    { q: "To ensure accountability, the Citizen's Charter must clearly state any fees that are to be paid by the client.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Service standards must be realistic and achievable to ensure they can be institutionalized within the agency's performance management system.", options: ["TRUE", "FALSE"], ans: 0 }
+                ]
+            },
+            {
+                title: "MODULE 4: FEEDBACK & COMPLAINTS MECHANISMS",
+                desc: "This module explains how to design the Feedback and Complaints Mechanism section of the Citizen’s Charter. It covers the procedures for submitting feedback, filing complaints, and how agencies process these inputs. It also includes guidelines for providing clear contact information for national feedback and complaints centers such as the Presidential Complaints Center (8888), CSC Contact Center ng Bayan, and ARTA.<br><br>A well-structured feedback and complaints mechanism promotes accountability, transparency, and continuous improvement in government service delivery. It empowers citizens to voice concerns and ensures agencies respond promptly and effectively, reinforcing trust and compliance with RA 11032.",
+                video: "1UuqaVHMp2empFXJIJWjBrrTj-O9Q9E00",
+                quiz: [
+                    { q: "Which of the following is the mandated first step for a government agency to begin the reengineering of its systems under RA 11032?", options: ["A. To designate a specific Anti-Red Tape Officer to lead all individual department evaluations.", "B. To conduct a 'Cost-Compliance Analysis' and 'Time and Motion Study' to evaluate current transaction systems.", "C. To immediately dismiss all personnel who have been involved in past 'fixing' incidents.", "D. To upload the existing Citizen's Charter to a social media platform for public commenting."], ans: 1 },
+                    { q: "What is the specific role of the Anti-Red Tape Authority (ARTA) in relation to other government agencies?", options: ["A. To act as the primary legal counsel for all government employees accused of graft.", "B. To set salary grades and performance bonuses for agencies that reduce their processing times.", "C. To implement a national policy on anti-red tape, monitor agency compliance, and investigate complaints.", "D. To provide the direct funding for the automation of local government business permitting systems."], ans: 2 },
+                    { q: "Under the law, which of the following actions constitutes 'fixing'?", options: ["A. An employee correcting a typo on a permit to ensure the applicant does not have to return the next day.", "B. Any individual facilitating the speedy completion of a transaction for monetary gain or any other advantage.", "C. A supervisor reviewing a complex transaction to ensure it meets technical health and safety standards.", "D. A security guard directing a citizen to the correct window for a simple transaction."], ans: 1 },
+                    { q: "How often must government agencies submit their consolidated Client Satisfaction Measurement (CSM) results to the Authority?", options: ["A. On a quarterly basis to align with the government's fiscal spending reports.", "B. On or before the last working day of January of every year.", "C. Only when the agency's Report Card Survey (RCS) grade falls below a 'passing' mark.", "D. Every three years, coinciding with the mandatory update of the Citizen’s Charter."], ans: 1 },
+                    { q: "Which system is officially used to refer to and handle complaints involving violations of RA 11032 within an agency?", options: ["A. The agency's internal 'Suggestion Box' found in the lobby.", "B. The Committee on Anti-Red Tape (CART) and/or the agency's Legal Office.", "C. The Human Resource Merit Selection and Promotion Board (HRMSPB).", "D. The personal email of the Department Secretary."], ans: 1 },
+                    { q: "All government agencies, including those located abroad (such as embassies), are mandated to comply with RA 11032.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Agencies are required to designate a 'Committee on Anti-Red Tape' (CART) rather than a single individual officer to ensure compliance.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "The Report Card Survey (RCS) is a holistic tool conducted by ARTA to measure the effectiveness of an agency's Citizen's Charter.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Client feedback is optional, and agencies may choose not to embed satisfaction measurements in their process improvements.", options: ["TRUE", "FALSE"], ans: 1 },
+                    { q: "Non-compliance with the prescribed processing times (3-7-20 days) can result in administrative sanctions, including a six-month suspension for the first offense.", options: ["TRUE", "FALSE"], ans: 0 }
+                ]
+            },
+            {
+                title: "MODULE 5: LIST OF OFFICES: HOW TO INCLUDE THEM",
+                desc: "This module explains how to properly include the List of Offices section in the Citizen’s Charter Handbook. It details the requirements for listing all offices covered by the charter, along with their addresses and contact information (telephone numbers and email addresses). It also highlights the importance of providing accurate details for easy access and compliance, and introduces the Certificate of Compliance (CoC) submission process to ensure adherence to RA 11032.<br><br>Including a complete and accurate list of offices ensures accessibility and transparency, allowing citizens to easily locate and contact the appropriate offices for their transactions. It also reinforces compliance with legal requirements, helping agencies maintain accountability and meet annual reporting deadlines.",
+                video: "1VuaQCeBPyTCiELbbtkCjmoVgd_WRiNwb",
+                quiz: [
+                    { q: "To achieve a 'PRIME-HRM' culture of excellence, which technology would most effectively bridge the gap between internal processing and client transparency?", options: ["A. A closed-circuit television (CCTV) system for monitoring employee attendance.", "B. An Integrated Electronic Business Permits and Licensing System (eBPLS) or eGovPH Super App integration.", "C. A private internal database accessible only to Division Chiefs.", "D. Both A and C are incorrect."], ans: 1 },
+                    { q: "Which of the following is considered a 'best practice' for ensuring that a government agency stays responsive to the evolving needs of its citizens?", options: ["A. Limiting the Citizen's Charter updates to once every decade to maintain consistency.", "B. Implementing a 'No Noon Break' policy and a visible Public Assistance and Complaints Desk (PACD).", "C. Relying solely on internal audits without conducting external Report Card Surveys (RCS).", "D. Both A and B are incorrect."], ans: 1 },
+                    { q: "What is the most critical factor in improving client satisfaction within the public sector, according to the SERVQUAL dimensions?", options: ["A. Increasing the physical size of the office and adding more luxury amenities.", "B. Ensuring high levels of assurance and empathy through competent and helpful staff.", "C. Mandating that all transactions be completed in under 60 seconds, regardless of complexity.", "D. Both A and C are incorrect."], ans: 1 },
+                    { q: "Which of the following is NOT a recommended best practice for a government agency aiming for service excellence?", options: ["A. Establishing a Committee on Anti-Red Tape (CART) to monitor compliance.", "B. Allowing 'voluntary' facilitators to help citizens navigate the building for a small tip.", "C. Using Data Analytics to identify bottlenecks in the 3-7-20 day processing cycle.", "D. Adopting ISO 9001:2015 Quality Management Systems (QMS)."], ans: 1 },
+                    { q: "How do feedback mechanisms, such as the Client Satisfaction Measurement (CSM), contribute to the principle of 'Continuous Improvement'?", options: ["A. They provide a legal basis for the immediate termination of any employee receiving a negative comment.", "B. They offer evidence-based insights that allow agencies to identify specific service gaps and reengineer processes.", "C. They serve as the primary source for the agency's annual social media marketing content.", "D. Both A and C are incorrect."], ans: 1 },
+                    { q: "Continuous improvement is a key principle of Total Quality Management (TQM) and is essential for maintaining global competitiveness in government.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Employee training is unnecessary for service excellence because the law (RA 11032) primarily focuses on automated systems and not human behavior.", options: ["TRUE", "FALSE"], ans: 1 },
+                    { q: "Feedback mechanisms like drop boxes and online surveys are only useful if the agency actually uses the data to inform its Improvement Action Plan.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "Best practices in service delivery involve prioritising the needs of the users (citizens) rather than the administrative convenience of the government.", options: ["TRUE", "FALSE"], ans: 0 },
+                    { q: "A 'Service Delivery Excellence Program' (SDEP) is only required for agencies that have already achieved an 'Outstanding' rating in their surveys.", options: ["TRUE", "FALSE"], ans: 1 }
+                ]
+            }
+        ]
+    };
+
+    let userState = { info: {}, docId: null, pretest_part2_answers: [] };
+    const app = document.getElementById('app');
+
+    // --- VIEW RENDER FUNCTIONS ---
+
+    function renderAttendance() {
+        app.innerHTML = `
+            <div class="card">
+                <h2>Attendance Form</h2>
+                <div class="instruction-box">Kindly provide your full name in the following format: FIRST NAME, MIDDLE INITIAL, and LAST NAME.</div>
+                <form id="attForm">
+                    <label>Training/Course Title:</label>
+                    <input type="text" value="Service Excellence: A Guide to RA11032 Citizen's Charter" readonly style="background:#f0f0f0;">
+                    
+                    <label>Full Name:</label>
+                    <input type="text" id="fname" required placeholder="JUAN A. DELA CRUZ">
+                    
+                    <label>Gender (GEDSI):</label>
+                    <select id="gender" required>
+                        <option value="">Select...</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-binary">Non-binary</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                    
+                    <label>Type of Employment:</label>
+                    <select id="emp" required>
+                        <option value="">Select...</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Co-terminus">Co-terminus</option>
+                        <option value="Contractual">Contractual</option>
+                        <option value="Contract of Service">Contract of Service</option>
+                        <option value="Job Order">Job Order</option>
+                    </select>
+                    
+                    <label>Position:</label><input type="text" id="pos" required>
+                    <label>Office/Division:</label><input type="text" id="off" required>
+                    <label>Complete ID Number:</label><input type="text" id="idn" required>
+                    <label>Mobile Number:</label><input type="tel" id="mob" required>
+                    
+                    <button type="submit" class="btn">Start AI-Monitored Session</button>
+                </form>
+            </div>
+        `;
+        
+        document.getElementById('attForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const info = {
+                name: document.getElementById('fname').value.toUpperCase(),
+                gender: document.getElementById('gender').value,
+                employment: document.getElementById('emp').value,
+                position: document.getElementById('pos').value,
+                office: document.getElementById('off').value,
+                id_num: document.getElementById('idn').value,
+                mobile: document.getElementById('mob').value,
+                timestamp: new Date().toISOString(),
+                status: 'Started',
+                ai_engagement: 100
+            };
+            
+            db.collection('attendance_logs').add(info).then(docRef => {
+                userState.docId = docRef.id;
+                userState.info = info;
+                renderIntro();
+            });
+        });
+    }
+
+    function renderIntro() {
+        app.innerHTML = `
+            <div class="card">
+                ${courseData.intro}
+                <div style="margin-top:20px; padding:15px; background:#e8f0fe; border-radius:8px; border:1px solid #c2d7fa;">
+                    <strong><i class="fas fa-robot"></i> AI Proctor Active:</strong> 
+                    Your engagement is being monitored to ensure training integrity. Please keep this tab active.
+                </div>
+                <button class="btn" style="margin-top:20px;" onclick="renderPretest()">Proceed to Pre-Test</button>
+            </div>
+        `;
+    }
+
+    function renderPretest() {
+        app.innerHTML = `
+            <div class="card">
+                <h2>Pre-Test</h2>
+                <div class="instruction-box">
+                    <strong>General Instructions:</strong> Please read each item carefully. For the Multiple-Choice section, select the BEST ANSWER among the options. For the True or False section, select TRUE if the statement is correct and FALSE if the statement is incorrect based on the provisions of RA 11032 and existing Department Orders.
+                </div>
+                
+                <h3>Test I. Matching Type (5 pts)</h3>
+                <p>Match the Charter component to its primary purpose.</p>
+                <div style="margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; font-size:0.9rem;">
+                    A. How citizens can file a complaint.<br>
+                    B. The list of fees and required documents.<br>
+                    C. The specific "promise" of time and quality.<br>
+                    D. The overarching goal of the agency.<br>
+                    E. A visual guide of the step-by-step process.
+                </div>
+                ${['Service Standards', 'Vision/Mission', 'Redress Mechanism', 'Checklist of Requirements', 'Flowchart'].map((item, i) => `
+                    <div class="quiz-item">
+                        <label><strong>${i+1}. ${item}</strong></label>
+                        <select id="pt1-${i}" style="margin-top:5px;"><option value="">Select...</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select>
+                    </div>
+                `).join('')}
+
+                <h3>Test II. True or False (5 pts)</h3>
+                <p>Read the statements below. In the "Before" column, write T if you think the statement is true and F if you think it is false.</p>
+                <div class="instruction-box">
+                    Statements:<br>
+                    1. A Citizen’s Charter is primarily a legal document for lawyers, not the general public.<br>
+                    2. Step-by-step procedures should include the specific office or person responsible for each step.<br>
+                    3. Feedback and grievance mechanisms are optional components of a Charter.<br>
+                    4. The Charter should specify the maximum time allowed for each transaction.<br>
+                    5. Only the head of the agency should be involved in drafting the Charter.
+                </div>
+                ${[1,2,3,4,5].map(i => `
+                    <div class="quiz-item" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Statement ${i}</span>
+                        <select id="pt2-${i-1}" style="width:100px; margin:0;"><option value="">Select...</option><option value="T">T</option><option value="F">F</option></select>
+                    </div>
+                `).join('')}
+
+                <h3>Test III. Scenario Analysis</h3>
+                <p>Scenario: The Department of Records has a handwritten sign taped to a small side door. The sign reads: "SERVICE: Processing of IDs. INSTRUCTIONS: Submit your forms to any window. TIME: It will take a few days. COMPLAINTS: If you are unhappy, please talk to the guard."</p>
+                <textarea id="pt3-ans" rows="5" placeholder="Identify 5 Errors..."></textarea>
+                
+                <button class="btn" onclick="submitPretest()">Submit Pre-Test</button>
+            </div>
+        `;
+    }
+
+    function submitPretest() {
+        // Save Pretest Part 2 answers for comparison later
+        for(let i=0; i<5; i++) userState.pretest_part2_answers.push(document.getElementById(`pt2-${i}`).value);
+        
+        // Mock scoring (Pretest score doesn't stop progress)
+        let score = 0;
+        // Logic: Correct answers based on prompt Key
+        const p1Key = ['C','D','A','B','E']; 
+        const p2Key = ['F','T','F','T','F'];
+        
+        for(let i=0; i<5; i++) if(document.getElementById(`pt1-${i}`).value === p1Key[i]) score++;
+        for(let i=0; i<5; i++) if(document.getElementById(`pt2-${i}`).value === p2Key[i]) score++;
+        
+        const essay = document.getElementById('pt3-ans').value.toLowerCase();
+        const keywords = ['handwritten', 'visible', 'vague', 'processing time', 'window', 'guard', 'checklist'];
+        let scenarioScore = 0;
+        keywords.forEach(k => { if(essay.includes(k)) scenarioScore++; });
+        score += Math.min(5, scenarioScore);
+
+        if(userState.docId) {
+            db.collection('attendance_logs').doc(userState.docId).update({ pretest_score: score });
+        }
+        
+        alert(`Pre-Test Submitted. Score: ${score}/15. Proceeding to Module 1.`);
+        renderModule(0);
+    }
+
+    function renderModule(idx) {
+        if(idx >= courseData.modules.length) { renderPosttest(); return; }
+        const mod = courseData.modules[idx];
+        
+        app.innerHTML = `
+            <div class="card">
+                <h2>${mod.title}</h2>
+                <div class="video-container"><iframe src="https://drive.google.com/file/d/${mod.video}/preview"></iframe></div>
+                <div class="instruction-box">
+                    <strong>Instructions:</strong> Please watch the learning video, as it will be monitored. You must achieve a 75% passing rate before proceeding to the next module.
+                </div>
+                <p>${mod.desc}</p>
+                <hr>
+                <h3>Module Quiz</h3>
+                <div class="instruction-box">
+                    <strong>General Instructions:</strong> Select the BEST ANSWER or TRUE/FALSE.
+                </div>
+                <div id="quiz-area">
+                    ${mod.quiz.map((q,i) => `
+                        <div class="quiz-item">
+                            <p><strong>${i+1}. ${q.q}</strong></p>
+                            ${q.options.map((o,oi) => `
+                                <label class="quiz-option-row">
+                                    <input type="radio" name="mq-${i}" value="${oi}"> <span>${o}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn" onclick="checkModule(${idx})">Submit Module Quiz</button>
+            </div>
+        `;
+    }
+
+    function checkModule(idx) {
+        const mod = courseData.modules[idx];
+        let score = 0;
+        let answeredAll = true;
+
+        mod.quiz.forEach((q, i) => {
+            const sel = document.querySelector(`input[name="mq-${i}"]:checked`);
+            if(!sel) answeredAll = false;
+            else if(parseInt(sel.value) === q.ans) score++;
+        });
+
+        if(!answeredAll) { alert("Please answer all questions."); return; }
+
+        // 75% Passing
+        const passing = Math.ceil(mod.quiz.length * 0.75);
+        if(score >= passing) {
+            alert(`Passed! Score: ${score}/${mod.quiz.length}. Proceeding to next module.`);
+            renderModule(idx + 1);
+        } else {
+            alert(`Failed. Score: ${score}/${mod.quiz.length}. You need ${passing} to pass. Please retry.`);
+        }
+    }
+
+    function renderPosttest() {
+        app.innerHTML = `
+            <div class="card">
+                <h2>Post-Test (AI Evaluated)</h2>
+                <div class="instruction-box">
+                    <strong>Instructions:</strong> Achieve a 90% (14/15) passing rate. Your essay will be pre-screened by AI.
+                </div>
+                
+                <h3>Test I. Matching Type (5 pts)</h3>
+                <p>Match the Charter component to its primary purpose.</p>
+                <div style="margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; font-size:0.9rem;">
+                    A. How citizens can file a complaint.<br>
+                    B. The list of fees and required documents.<br>
+                    C. The specific "promise" of time and quality.<br>
+                    D. The overarching goal of the agency.<br>
+                    E. A visual guide of the step-by-step process.
+                </div>
+                ${['Service Standards', 'Vision/Mission', 'Redress Mechanism', 'Checklist of Requirements', 'Flowchart'].map((item, i) => `
+                    <div class="quiz-item">
+                        <label><strong>${i+1}. ${item}</strong></label>
+                        <select id="post1-${i}" style="margin-top:5px;"><option value="">Select...</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select>
+                    </div>
+                `).join('')}
+
+                <h3>Test II. True or False (5 pts)</h3>
+                <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead><tr><th>Statement</th><th>Before</th><th>After</th></tr></thead>
+                    <tbody>
+                        ${['Citizen’s Charter is for lawyers', 'Procedures include person responsible', 'Feedback optional', 'Specify max time', 'Only head involved'].map((txt, i) => `
+                            <tr>
+                                <td>${i+1}. ${txt}</td>
+                                <td>${userState.pretest_part2_answers[i] || '-'}</td>
+                                <td><select id="post2-${i}"><option value="">Select...</option><option value="T">T</option><option value="F">F</option></select></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                </div>
+
+                <h3>Test III. Scenario Analysis (AI Scored)</h3>
+                <p>Scenario: Department of Records handwritten sign errors.</p>
+                <textarea id="post3-ans" rows="5" placeholder="Identify 5 Errors..."></textarea>
+                <div id="ai-feedback" style="display:none; padding:10px; margin-top:10px; border-radius:5px;"></div>
+
+                <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:10px;">
+                    <h3>Reflective Questions</h3>
+                    <p>1. Give learning insights applicable to your job.</p><textarea id="ref1" rows="3"></textarea>
+                    <p>2. Please give suggestion/s to help us improve this program.</p><textarea id="ref2" rows="3"></textarea>
+                </div>
+
+                <button class="btn" onclick="checkPosttest()">Submit Post-Test</button>
+            </div>
+        `;
+    }
+
+    function checkPosttest() {
+        let score = 0;
+        
+        // Key based on provided correct answers
+        const p1Key = ['C','D','A','B','E']; 
+        const p2Key = ['F','T','F','T','F'];
+
+        for(let i=0; i<5; i++) if(document.getElementById(`post1-${i}`).value === p1Key[i]) score++;
+        for(let i=0; i<5; i++) if(document.getElementById(`post2-${i}`).value === p2Key[i]) score++;
+
+        // AI Essay Scoring
+        const essay = document.getElementById('post3-ans').value.toLowerCase();
+        const keywords = ['handwritten', 'visible', 'vague', 'processing time', 'window', 'guard', 'checklist'];
+        let keywordCount = 0;
+        keywords.forEach(k => { if(essay.includes(k)) keywordCount++; });
+        let aiScore = Math.min(5, keywordCount);
+        
+        // Show AI Feedback
+        const fb = document.getElementById('ai-feedback');
+        fb.style.display = 'block';
+        if(aiScore < 3) {
+            fb.className = 'ai-badge ai-low';
+            fb.innerHTML = `<strong>AI Analysis:</strong> Answer incomplete. Found ${keywordCount} key concepts. Please elaborate on missing elements (e.g. visibility, time, feedback).`;
+            return;
+        } else {
+            fb.className = 'ai-badge ai-high';
+            fb.innerHTML = `<strong>AI Analysis:</strong> Good answer! Found ${keywordCount} key concepts. Engagement Score: ${aiProctor.getEngagementScore()}%`;
+        }
+
+        const r1 = document.getElementById('ref1').value;
+        const r2 = document.getElementById('ref2').value;
+        if(r1.length < 5 || r2.length < 5) { alert("Please complete reflective questions."); return; }
+
+        let totalScore = score + aiScore;
+        // 90% of 15 is 13.5 -> 14
+        if(totalScore >= 14) {
+             if(userState.docId) {
+                db.collection('attendance_logs').doc(userState.docId).update({ 
+                    posttest_score: totalScore,
+                    ai_engagement: aiProctor.getEngagementScore(),
+                    status: 'Completed' 
+                });
+            }
+            alert(`Passed Post-Test! Score: ${totalScore}/15. Proceeding to Evaluation.`);
+            renderEvaluation();
+        } else {
+            alert(`Failed. Score: ${totalScore}/15. You need 14 to pass. Please review.`);
+        }
+    }
+
+    function renderEvaluation() {
+        const items = [
+            "The course objectives were clearly stated and easy to understand.",
+            "The sequencing of the topics displayed good flow, logic and organization.",
+            "The resource person/materials displayed mastery of the subject matter.",
+            "Efforts were made to relate the subject/topic to real life situations.",
+            "I was informed of the course schedule, objective and requirements.",
+            "Efforts were exerted to effectively deliver the program/course.",
+            "All training materials were relevant to the course objectives.",
+            "Training materials and activities were well prepared, organized and participant-friendly.",
+            "The contents were updated and accurate.",
+            "Necessary training materials were provided.",
+            "The setup is comfortable, accessible, and free of distractions.",
+            "The learning gained from this training will be beneficial at work.",
+            "I learned new knowledge and skills from the training.",
+            "The learning gained from this training will contribute to my personal development.",
+            "The online course met my expectations.",
+            "I will recommend this program to my co-worker."
+        ];
+
+        app.innerHTML = `
+            <div class="card">
+                <h2>Program Evaluation</h2>
+                <form id="evalForm">
+                    ${items.map((q, i) => `
+                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:10px 0; align-items:center;">
+                            <span style="flex:1; padding-right:10px;">${q}</span>
+                            <div style="min-width:150px; text-align:right;">
+                                ${[1,2,3,4,5].map(v => `<label style="margin-left:8px;"><input type="radio" name="ev-${i}" value="${v}" required> ${v}</label>`).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                    <label>Suggestions:</label> <textarea id="eval-sugg"></textarea>
+                    <button type="submit" class="btn">Generate Certificate</button>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('evalForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const ratings = {};
+            items.forEach((q,i) => {
+                ratings[`q${i}`] = document.querySelector(`input[name="ev-${i}"]:checked`).value;
+            });
+            const suggestion = document.getElementById('eval-sugg').value;
+            
+            db.collection('evaluations').add({
+                user: userState.info.name, 
+                ratings: ratings,
+                suggestion: suggestion,
+                date: new Date().toISOString()
+            });
+            renderCertificate();
+        });
+    }
+
+    function renderCertificate() {
+        app.innerHTML = `
+            <div id="certificate-view" style="display:block">
+                <div style="border: 2px solid var(--accent); padding: 30px; height: 100%; position:relative;">
+                    
+                    <div style="display:flex; justify-content:center; gap:50px; margin-bottom:20px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Department_of_Transportation_%28Philippines%29.svg/1200px-Department_of_Transportation_%28Philippines%29.svg.png" style="height:100px;">
+                        <img src="https://bagongpilipinasmediahub.ph/wp-content/uploads/2023/12/bagong-pilipinas-logo.png" style="height:100px;">
+                    </div>
+
+                    <h1 style="color:var(--primary); font-family: 'Georgia', serif; font-size: 3rem; margin:10px 0;">CERTIFICATE OF COMPLETION</h1>
+                    
+                    <p style="font-size:1.3rem; margin-top:20px;">is proudly presented to</p>
+                    <div style="font-size:2.5rem; font-weight:bold; border-bottom:3px solid var(--accent); display:inline-block; min-width:500px; margin:20px 0; text-transform:uppercase;">
+                        ${userState.info.name}
+                    </div>
+                    
+                    <div style="font-size:1.2rem; line-height:1.6; margin: 20px 10%;">
+                        For successfully completing the interactive self-paced online learning course entitled:<br>
+                        <strong style="font-size:1.5rem; color:#222;">"Service Excellence: A Guide to RA11032 Citizen's Charter"</strong><br>
+                        
+                        <div style="margin:20px 0;">
+                            <span style="display:inline-block; padding:10px 20px; background:#f0f4ff; border:2px solid var(--primary); border-radius:50px; color:var(--primary); font-weight:bold; font-size:1.1rem;">
+                                CREDITED: 4 TRAINING HOURS
+                            </span>
+                        </div>
+
+                        Given this ${new Date().toLocaleDateString()}.
+                    </div>
+                    
+                    <div style="margin: 30px 0; font-size:1rem; color:#555;">
+                        <strong>COMPETENCY COMPLETED</strong><br>
+                        Core Competency | Basic Level | Quality Management
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:50px; padding:0 50px;">
+                        <div id="qrcode"></div>
+                        <div style="text-align:center;">
+                            <div style="border-top: 2px solid #333; width: 350px; margin-bottom:10px;"></div>
+                            <strong>ERIKA LLYSSA G. MAGPAYO</strong><br>
+                            <span style="font-size:0.9rem;">Director IV for Administrative Service concurrent<br>
+                            Management Information Systems Service</span>
+                        </div>
+                    </div>
+                    
+                    <p style="font-size:0.7rem; margin-top:30px; color:#999">Certificate ID: CERT-${userState.docId}</p>
+                </div>
+                
+                <div style="text-align:center; margin-top:30px;">
+                    <button class="btn" onclick="window.print()">Print Certificate</button>
+                </div>
+            </div>
+        `;
+        
+        new QRCode(document.getElementById("qrcode"), { 
+            text: `CERT-${userState.docId}|Name:${userState.info.name}|Hours:4|Date:${new Date().toLocaleDateString()}`, 
+            width:120, height:120 
+        });
+        
+        db.collection('certificates').add({ 
+            certID: `CERT-${userState.docId}`,
+            name: userState.info.name, 
+            date: new Date().toISOString() 
+        });
+    }
+
+    // --- ADMIN LOGIC ---
+    function verifyAdmin() {
+        if(document.getElementById('admin-pass').value === 'hrdd2O26') {
+            document.getElementById('login-modal').style.display='none';
+            document.getElementById('app').style.display='none';
+            document.getElementById('admin-panel').style.display='block';
+            loadAdminData();
+        } else {
+            alert("Incorrect Password");
+        }
+    }
+
+    async function loadAdminData() {
+        const snap = await db.collection('attendance_logs').orderBy('timestamp', 'desc').get();
+        let html = '';
+        let total = 0, engSum = 0, completed = 0;
+        
+        snap.forEach(doc => {
+            const d = doc.data();
+            total++;
+            if(d.ai_engagement) engSum += d.ai_engagement;
+            if(d.status === 'Completed') completed++;
+            
+            let badgeClass = 'ai-med';
+            if(d.ai_engagement >= 80) badgeClass = 'ai-high';
+            if(d.ai_engagement < 50) badgeClass = 'ai-low';
+
+            html += `<tr>
+                <td>${d.name}</td>
+                <td>${d.pretest_score || '-'}</td>
+                <td>${d.posttest_score || '-'}</td>
+                <td><span class="ai-badge ${badgeClass}">${d.ai_engagement || 0}%</span></td>
+                <td>${d.status}</td>
+            </tr>`;
+        });
+
+        document.getElementById('admin-table').querySelector('tbody').innerHTML = html;
+        document.getElementById('total-trainees').innerText = total;
+        document.getElementById('avg-engagement').innerText = total ? Math.round(engSum/total) + '%' : '0%';
+        document.getElementById('completion-rate').innerText = total ? Math.round((completed/total)*100) + '%' : '0%';
+    }
+
+    // Start App
+    renderAttendance();
+
+</script>
+</body>
+</html>
